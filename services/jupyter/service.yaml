@@ -1,0 +1,9 @@
+name: JupyterLab
+category: notebook
+port: 8888
+url: "http://localhost:8888/lab?token=ecosystem"
+credentials: "token: ecosystem"
+
+healthcheck:
+  type: http
+  endpoint: "http://localhost:8888/api"

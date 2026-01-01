@@ -1,0 +1,21 @@
+# SQL Magic and Database Connectors
+ipython-sql==0.5.0
+psycopg2-binary==2.9.10
+pymysql==1.1.1
+
+# Data Processing
+pyarrow==19.0.0
+dbt-core==1.9.1
+dbt-postgres==1.9.0
+
+# Visualization
+altair==5.5.0
+
+# Data Profiling
+ydata-profiling[notebook]==4.18.0
+
+# Elasticsearch client
+elasticsearch==8.17.0
+
+# Redis client
+redis==5.2.1

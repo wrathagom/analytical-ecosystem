@@ -1,0 +1,8 @@
+name: PostgreSQL
+category: database
+port: 5432
+url: "localhost:5432"
+
+healthcheck:
+  type: exec
+  command: ["pg_isready", "-U", "analyticsUser", "-d", "analytics"]

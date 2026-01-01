@@ -1,0 +1,10 @@
+name: Kibana
+category: search
+port: 5601
+url: "http://localhost:5601"
+depends_on:
+  - elasticsearch
+
+healthcheck:
+  type: http
+  endpoint: "http://localhost:5601/api/status"

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Wrapper script that runs the Python CLI with the correct virtual environment
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_PYTHON="$SCRIPT_DIR/.venv/bin/python3"
+
+# Check if venv exists
+if [[ ! -f "$VENV_PYTHON" ]]; then
+    echo "Setting up virtual environment..."
+    python3 -m venv "$SCRIPT_DIR/.venv"
+    "$SCRIPT_DIR/.venv/bin/pip" install -q -r "$SCRIPT_DIR/requirements.txt"
+fi
+
+exec "$VENV_PYTHON" "$SCRIPT_DIR/ecosystem.py" "$@"

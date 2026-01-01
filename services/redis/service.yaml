@@ -1,0 +1,8 @@
+name: Redis
+category: cache
+port: 6379
+url: "localhost:6379"
+
+healthcheck:
+  type: exec
+  command: ["redis-cli", "ping"]

@@ -1,0 +1,8 @@
+name: Elasticsearch
+category: search
+port: 9200
+url: "http://localhost:9200"
+
+healthcheck:
+  type: http
+  endpoint: "http://localhost:9200"
