@@ -205,8 +205,9 @@ def menu_services_running(
     print(f"  {Colors.BOLD}3{Colors.NC}) Open shell")
     print(f"  {Colors.BOLD}4{Colors.NC}) Run health checks")
     print(f"  {Colors.BOLD}5{Colors.NC}) Start more services")
-    print(f"  {Colors.BOLD}6{Colors.NC}) Restart services")
-    print(f"  {Colors.BOLD}7{Colors.NC}) Stop services")
+    print(f"  {Colors.BOLD}6{Colors.NC}) Rebuild services")
+    print(f"  {Colors.BOLD}7{Colors.NC}) Restart services")
+    print(f"  {Colors.BOLD}8{Colors.NC}) Stop services")
     print(f"  {Colors.BOLD}q{Colors.NC}) Quit")
     print()
 
@@ -241,9 +242,12 @@ def menu_services_running(
             handle_service_selection(available)
 
     elif choice == "6":
-        restart_menu(running, all_profiles)
+        rebuild_menu(running, all_profiles)
 
     elif choice == "7":
+        restart_menu(running, all_profiles)
+
+    elif choice == "8":
         stop_menu(running, all_profiles)
 
     return True
@@ -509,6 +513,47 @@ def shell_menu(running: list[dict]):
             wait_for_enter()
     except ValueError:
         pass
+
+
+def rebuild_menu(running: list[dict], all_profiles: list[str]):
+    """Menu to rebuild service images."""
+    clear_screen()
+    print_header("Rebuild services")
+
+    print_color("Which service to rebuild?", Colors.BOLD)
+    print()
+    print(f"  {Colors.BOLD}0{Colors.NC}) All running services")
+
+    for i, svc in enumerate(running, 1):
+        print(f"  {Colors.BOLD}{i}{Colors.NC}) {svc['name']}")
+
+    print(f"  {Colors.BOLD}b{Colors.NC}) Back")
+    print()
+
+    choice = get_input()
+
+    if choice in ("b", "back"):
+        return
+
+    if choice == "0":
+        print_color("\nRebuilding and restarting all services...", Colors.CYAN)
+        running_profiles = [r["id"] for r in running]
+        docker.build_services(running_profiles)
+        docker.compose_command(["up", "-d", "--build"], running_profiles)
+        print_color("Rebuild complete.", Colors.GREEN)
+        wait_for_enter()
+    else:
+        try:
+            idx = int(choice) - 1
+            if 0 <= idx < len(running):
+                svc = running[idx]
+                print_color(f"\nRebuilding {svc['name']}...", Colors.CYAN)
+                docker.build_services([svc["id"]])
+                docker.compose_command(["up", "-d", "--build"], [svc["id"]])
+                print_color("Rebuild complete.", Colors.GREEN)
+                wait_for_enter()
+        except ValueError:
+            pass
 
 
 def restart_menu(running: list[dict], all_profiles: list[str]):

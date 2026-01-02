@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:17.2
+    profiles: ["postgres"]
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      POSTGRES_USER: ${POSTGRES_USER:-analyticsUser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-analyticsPass}
+      POSTGRES_DB: ${POSTGRES_DB:-analytics}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-analyticsUser} -d ${POSTGRES_DB:-analytics}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecosystem
+
+volumes:
+  postgres-data:

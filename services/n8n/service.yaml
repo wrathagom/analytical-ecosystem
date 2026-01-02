@@ -1,0 +1,9 @@
+name: n8n
+category: orchestration
+port: 5678
+url: "http://localhost:5678"
+credentials: "admin@localhost / ecosystem"
+
+healthcheck:
+  type: http
+  endpoint: "http://localhost:5678/healthz"

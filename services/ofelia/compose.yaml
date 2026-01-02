@@ -1,0 +1,9 @@
+services:
+  ofelia:
+    image: mcuadros/ofelia:latest
+    profiles: ["ofelia"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./services/ofelia/config.ini:/etc/ofelia/config.ini:ro
+    networks:
+      - ecosystem

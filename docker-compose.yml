@@ -1,0 +1,17 @@
+# Analytical Ecosystem - Docker Compose
+#
+# This file defines shared resources (networks).
+# Service definitions are in services/*/compose.yaml
+#
+# The ecosystem CLI combines these files using -f flags:
+#   docker compose -f docker-compose.yml -f ../../services/postgres/compose.yaml up -d
+#
+# Or use the interactive launcher:
+#   ./ecosystem
+
+name: analytical-ecosystem
+
+# Shared network for all services
+networks:
+  ecosystem:
+    name: analytical-ecosystem

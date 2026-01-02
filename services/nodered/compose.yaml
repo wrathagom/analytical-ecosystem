@@ -1,0 +1,23 @@
+services:
+  nodered:
+    image: nodered/node-red:4.0
+    profiles: ["nodered"]
+    ports:
+      - "${NODERED_PORT:-1880}:1880"
+    volumes:
+      - nodered-data:/data
+      - ./services/nodered/settings.js:/data/settings.js:ro
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      NODERED_USER: ${NODERED_USER:-admin}
+      NODERED_PASSWORD_HASH: ${NODERED_PASSWORD_HASH:-$$2b$$08$$K3WmJkPM5RfDR7kuBvGn4eYKGlFmxLVdBNwMBwVH8GdNzDqLT0Wdm}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:1880 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - ecosystem
+
+volumes:
+  nodered-data:

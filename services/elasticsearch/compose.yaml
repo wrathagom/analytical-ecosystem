@@ -1,0 +1,30 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+    profiles: ["elasticsearch"]
+    ports:
+      - "${ES_PORT:-9200}:9200"
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      xpack.security.enrollment.enabled: "false"
+      xpack.security.http.ssl.enabled: "false"
+      xpack.security.transport.ssl.enabled: "false"
+      ES_JAVA_OPTS: "-Xms${ES_HEAP:-1g} -Xmx${ES_HEAP:-1g}"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 | grep -q 'cluster_name'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - ecosystem
+
+volumes:
+  elasticsearch-data:

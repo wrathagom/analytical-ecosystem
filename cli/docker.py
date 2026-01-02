@@ -5,15 +5,15 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from .config import get_project_root, Service
+from .config import get_project_root, Service, discover_services
 
 
 PROJECT_NAME = "analytical-ecosystem"
 
 
 def get_compose_dir() -> Path:
-    """Get the docker-compose directory."""
-    return get_project_root() / "orchestration" / "docker"
+    """Get the docker-compose directory (project root)."""
+    return get_project_root()
 
 
 def get_env_file() -> Path:
@@ -29,6 +29,36 @@ def ensure_env():
         env_file.write_text(f"AIRFLOW_UID={uid}\n")
 
 
+def get_compose_files(profiles: list[str]) -> list[Path]:
+    """Get list of compose files for the given profiles."""
+    root = get_project_root()
+    compose_dir = get_compose_dir()
+    services_dir = root / "services"
+
+    files = [compose_dir / "docker-compose.yml"]  # Base file with network
+
+    for profile in profiles:
+        compose_file = services_dir / profile / "compose.yaml"
+        if compose_file.exists():
+            files.append(compose_file)
+
+    return files
+
+
+def build_file_args(profiles: list[str]) -> list[str]:
+    """Build -f arguments for docker compose (paths relative to project root)."""
+    root = get_project_root()
+    args = []
+    for compose_file in get_compose_files(profiles):
+        # Make paths relative to project root for cleaner output
+        try:
+            rel_path = compose_file.relative_to(root)
+            args.extend(["-f", str(rel_path)])
+        except ValueError:
+            args.extend(["-f", str(compose_file)])
+    return args
+
+
 def build_profile_args(profiles: list[str]) -> list[str]:
     """Build --profile arguments for docker compose."""
     args = []
@@ -42,19 +72,22 @@ def compose_command(
     profiles: Optional[list[str]] = None,
     capture_output: bool = False,
 ) -> subprocess.CompletedProcess:
-    """Run a docker compose command."""
-    compose_dir = get_compose_dir()
+    """Run a docker compose command from project root."""
+    project_root = get_project_root()
 
     full_cmd = ["docker", "compose"]
 
     if profiles:
+        # Use -f flags to include service compose files
+        full_cmd.extend(build_file_args(profiles))
+        # Also use profile flags for filtering
         full_cmd.extend(build_profile_args(profiles))
 
     full_cmd.extend(cmd)
 
     return subprocess.run(
         full_cmd,
-        cwd=compose_dir,
+        cwd=project_root,  # Run from project root so paths resolve correctly
         capture_output=capture_output,
         text=True,
     )

@@ -1,0 +1,24 @@
+services:
+  mysql:
+    image: mysql:8.0
+    profiles: ["mysql"]
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootPass}
+      MYSQL_USER: ${MYSQL_USER:-analyticsUser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-analyticsPass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-analytics}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecosystem
+
+volumes:
+  mysql-data:

@@ -53,7 +53,7 @@ def get_project_root() -> Path:
     # Walk up from this file to find the project root
     current = Path(__file__).resolve().parent
     while current != current.parent:
-        if (current / "orchestration" / "docker" / "docker-compose.yml").exists():
+        if (current / "docker-compose.yml").exists():
             return current
         current = current.parent
     raise RuntimeError("Could not find project root")

@@ -1,0 +1,69 @@
+services:
+  superset-redis:
+    image: redis:7-alpine
+    profiles: ["superset"]
+    volumes:
+      - superset-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecosystem
+
+  superset:
+    image: apache/superset:4.1.1
+    profiles: ["superset"]
+    ports:
+      - "${SUPERSET_PORT:-8088}:8088"
+    volumes:
+      - superset-data:/app/superset_home
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-thisISaSECRET_1234}
+      REDIS_HOST: superset-redis
+      REDIS_PORT: 6379
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8088/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    depends_on:
+      superset-redis:
+        condition: service_healthy
+    networks:
+      - ecosystem
+
+  superset-init:
+    image: apache/superset:4.1.1
+    profiles: ["superset"]
+    command:
+      - /bin/bash
+      - -c
+      - |
+        superset db upgrade
+        superset fab create-admin \
+          --username ${SUPERSET_ADMIN_USER:-admin} \
+          --firstname Admin \
+          --lastname User \
+          --email admin@localhost \
+          --password ${SUPERSET_ADMIN_PASSWORD:-admin} || true
+        superset init
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-thisISaSECRET_1234}
+      REDIS_HOST: superset-redis
+      REDIS_PORT: 6379
+    volumes:
+      - superset-data:/app/superset_home
+    depends_on:
+      superset-redis:
+        condition: service_healthy
+    networks:
+      - ecosystem
+
+volumes:
+  superset-data:
+  superset-redis-data:

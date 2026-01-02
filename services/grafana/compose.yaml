@@ -1,0 +1,22 @@
+services:
+  grafana:
+    image: grafana/grafana:11.4.0
+    profiles: ["grafana"]
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - ecosystem
+
+volumes:
+  grafana-data:

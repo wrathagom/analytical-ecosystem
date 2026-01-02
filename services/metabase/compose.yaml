@@ -1,0 +1,44 @@
+services:
+  metabase:
+    image: metabase/metabase:v0.52.5
+    profiles: ["metabase"]
+    ports:
+      - "${METABASE_PORT:-3000}:3000"
+    volumes:
+      - metabase-data:/metabase-data
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      MB_DB_FILE: /metabase-data/metabase.db
+      MB_ANON_TRACKING_ENABLED: "false"
+      MB_CHECK_FOR_UPDATES: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - ecosystem
+
+  metabase-init:
+    image: curlimages/curl:latest
+    profiles: ["metabase"]
+    volumes:
+      - ./services/metabase/setup.sh:/setup.sh:ro
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      METABASE_URL: http://metabase:3000
+      MB_ADMIN_EMAIL: ${MB_ADMIN_EMAIL:-admin@localhost}
+      MB_ADMIN_PASSWORD: ${MB_ADMIN_PASSWORD:-ecosystem}
+      MB_ADMIN_FIRST_NAME: ${MB_ADMIN_FIRST_NAME:-Admin}
+      MB_ADMIN_LAST_NAME: ${MB_ADMIN_LAST_NAME:-User}
+      MB_SITE_NAME: ${MB_SITE_NAME:-Analytical Ecosystem}
+    entrypoint: ["/bin/sh", "/setup.sh"]
+    depends_on:
+      metabase:
+        condition: service_started
+    networks:
+      - ecosystem
+
+volumes:
+  metabase-data:
