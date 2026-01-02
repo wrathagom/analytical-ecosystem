@@ -13,7 +13,10 @@ services:
       - ecosystem
 
   superset:
-    image: apache/superset:4.1.1
+    build:
+      context: ./services/superset
+      dockerfile: Dockerfile
+    image: analytical-ecosystem-superset:4.1.1
     profiles: ["superset"]
     ports:
       - "${SUPERSET_PORT:-8088}:8088"
@@ -37,7 +40,10 @@ services:
       - ecosystem
 
   superset-init:
-    image: apache/superset:4.1.1
+    build:
+      context: ./services/superset
+      dockerfile: Dockerfile
+    image: analytical-ecosystem-superset:4.1.1
     profiles: ["superset"]
     command:
       - /bin/bash

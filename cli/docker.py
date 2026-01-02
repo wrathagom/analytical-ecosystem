@@ -29,6 +29,19 @@ def ensure_env():
         env_file.write_text(f"AIRFLOW_UID={uid}\n")
 
 
+def ensure_network():
+    """Ensure the shared network exists."""
+    result = subprocess.run(
+        ["docker", "network", "inspect", PROJECT_NAME],
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        subprocess.run(
+            ["docker", "network", "create", PROJECT_NAME],
+            capture_output=True,
+        )
+
+
 def get_compose_files(profiles: list[str]) -> list[Path]:
     """Get list of compose files for the given profiles."""
     root = get_project_root()
@@ -96,6 +109,7 @@ def compose_command(
 def start_services(profiles: list[str], build: bool = True) -> bool:
     """Start services with the given profiles."""
     ensure_env()
+    ensure_network()
 
     cmd = ["up", "-d"]
     if build:
