@@ -1,0 +1,9 @@
+name: Node-RED
+category: orchestration
+port: 1880
+url: "http://localhost:1880"
+credentials: "admin / ecosystem"
+
+healthcheck:
+  type: http
+  endpoint: "http://localhost:1880"
