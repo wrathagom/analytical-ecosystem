@@ -30,6 +30,7 @@ A modular, containerized analytics platform. Pick the services you need - databa
 | **Search** | Kibana | 5601 | Elasticsearch visualization |
 | **Notebook** | JupyterLab | 8888 | Interactive notebooks with Python, R, Julia |
 | **Visualization** | Metabase | 3000 | Business intelligence dashboards |
+| **Visualization** | Big Beautiful Screens | 8000 | Real-time display dashboards |
 | **Visualization** | Grafana | 3001 | Metrics and monitoring dashboards |
 | **Orchestration** | Airflow | 8080 | Workflow orchestration with Docker operator |
 | **Orchestration** | Ofelia | - | Lightweight cron scheduler |

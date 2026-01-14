@@ -1,0 +1,13 @@
+services:
+  big-beautiful-screens:
+    image: calebmkeller/big-beautiful-screens:0.1.0
+    profiles: ["big-beautiful-screens"]
+    ports:
+      - "${BBS_PORT:-8000}:8000"
+    volumes:
+      - bbs-data:/app/data
+    networks:
+      - ecosystem
+
+volumes:
+  bbs-data:
