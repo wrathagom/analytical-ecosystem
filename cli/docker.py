@@ -9,6 +9,13 @@ from .config import get_project_root, Service, discover_services
 
 
 PROJECT_NAME = "analytical-ecosystem"
+VERBOSE = False
+
+
+def set_verbose(enabled: bool) -> None:
+    """Enable verbose docker compose output (including orphan warnings)."""
+    global VERBOSE
+    VERBOSE = enabled
 
 
 def get_compose_dir() -> Path:
@@ -98,11 +105,16 @@ def compose_command(
 
     full_cmd.extend(cmd)
 
+    env = os.environ.copy()
+    if not VERBOSE:
+        env["COMPOSE_IGNORE_ORPHANS"] = "1"
+
     return subprocess.run(
         full_cmd,
         cwd=project_root,  # Run from project root so paths resolve correctly
         capture_output=capture_output,
         text=True,
+        env=env,
     )
 
 
@@ -121,7 +133,7 @@ def start_services(profiles: list[str], build: bool = True) -> bool:
 
 def stop_services(profiles: list[str]) -> bool:
     """Stop services."""
-    result = compose_command(["down"], profiles)
+    result = compose_command(["down", "--remove-orphans"], profiles)
     return result.returncode == 0
 
 
@@ -139,7 +151,7 @@ def build_services(profiles: list[str]) -> bool:
 
 def clean_services(profiles: list[str]) -> bool:
     """Stop services and remove volumes."""
-    result = compose_command(["down", "-v"], profiles)
+    result = compose_command(["down", "-v", "--remove-orphans"], profiles)
     return result.returncode == 0
 
 

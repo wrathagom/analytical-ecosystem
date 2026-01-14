@@ -18,6 +18,7 @@ from cli.commands import (
     cmd_logs, cmd_build, cmd_clean, cmd_nuke, cmd_shell, cmd_test, cmd_env,
 )
 from cli.ui import interactive_mode
+from cli import docker
 
 
 def main():
@@ -40,6 +41,11 @@ Examples:
     parser.add_argument(
         "--profiles", "-p",
         help="Comma-separated list of service profiles",
+    )
+    parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Show verbose output from docker compose",
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
@@ -70,6 +76,7 @@ Examples:
     )
 
     args = parser.parse_args()
+    docker.set_verbose(args.verbose)
 
     # Parse profiles
     profiles = []

@@ -34,29 +34,48 @@ def test_build_file_args(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
 def test_compose_command_builds_expected_call(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     root = make_project_root(tmp_path)
     monkeypatch.setattr(docker, "get_project_root", lambda: root)
+    monkeypatch.setattr(docker, "VERBOSE", False)
 
-    calls: list[list[str]] = []
+    calls: list[tuple[list[str], dict]] = []
 
-    def fake_run(cmd, cwd=None, capture_output=False, text=False):
-        calls.append(cmd)
+    def fake_run(cmd, cwd=None, capture_output=False, text=False, env=None):
+        calls.append((cmd, {"cwd": cwd, "capture_output": capture_output, "text": text, "env": env or {}}))
         return SimpleNamespace(returncode=0)
 
     monkeypatch.setattr(docker.subprocess, "run", fake_run)
 
     docker.compose_command(["ps"], profiles=["svc"])
-    assert calls == [
-        [
-            "docker",
-            "compose",
-            "-f",
-            "docker-compose.yml",
-            "-f",
-            "services/svc/compose.yaml",
-            "--profile",
-            "svc",
-            "ps",
-        ]
+    assert len(calls) == 1
+    cmd, meta = calls[0]
+    assert cmd == [
+        "docker",
+        "compose",
+        "-f",
+        "docker-compose.yml",
+        "-f",
+        "services/svc/compose.yaml",
+        "--profile",
+        "svc",
+        "ps",
     ]
+    assert meta["env"]["COMPOSE_IGNORE_ORPHANS"] == "1"
+
+
+def test_compose_command_verbose_keeps_orphans(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    root = make_project_root(tmp_path)
+    monkeypatch.setattr(docker, "get_project_root", lambda: root)
+    monkeypatch.setattr(docker, "VERBOSE", True)
+
+    captured: dict[str, dict] = {}
+
+    def fake_run(cmd, cwd=None, capture_output=False, text=False, env=None):
+        captured["env"] = env or {}
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(docker.subprocess, "run", fake_run)
+
+    docker.compose_command(["ps"], profiles=["svc"])
+    assert "COMPOSE_IGNORE_ORPHANS" not in captured["env"]
 
 
 def test_ensure_env_creates_file(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

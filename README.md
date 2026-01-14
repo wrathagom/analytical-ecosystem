@@ -48,6 +48,7 @@ A modular, containerized analytics platform. Pick the services you need - databa
 ./ecosystem build                        # Build service images
 ./ecosystem clean                        # Stop and remove all volumes (data reset)
 ./ecosystem env --output .env            # Generate an env file from fragments
+./ecosystem --verbose status             # Show docker compose warnings
 ```
 
 ## Architecture
