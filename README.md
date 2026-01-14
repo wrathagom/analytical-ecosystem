@@ -2,6 +2,23 @@
 
 A modular, containerized analytics platform. Pick the services you need - databases, notebooks, orchestration, visualization - and spin them up with a single command.
 
+## Installation
+
+```bash
+git clone https://github.com/wrathagom/analytical-ecosystem.git
+cd analytical-ecosystem
+```
+
+Requirements:
+- Docker and Docker Compose
+- Python 3.10+
+
+Optional: generate a tailored env file before you start:
+
+```bash
+./ecosystem --profiles postgres,jupyter env --output .env
+```
+
 ## Quick Start
 
 ```bash
