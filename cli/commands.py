@@ -4,9 +4,11 @@ import subprocess
 import urllib.request
 import urllib.error
 from typing import Optional
+from pathlib import Path
 
-from .config import Service, discover_services, get_services_by_category, CATEGORIES
+from .config import Service, discover_services, get_services_by_category, CATEGORIES, get_project_root
 from . import docker
+from . import env as env_utils
 
 
 class Colors:
@@ -298,3 +300,30 @@ def print_urls(profiles: list[str], services: dict[str, Service]):
         if svc.url:
             creds = f" ({svc.credentials})" if svc.credentials else ""
             print(f"  {svc.name}: {svc.url}{creds}")
+
+
+def cmd_env(profiles: list[str], output: str) -> bool:
+    """Generate a consolidated env file from fragments."""
+    root = get_project_root()
+    output_path = Path(output)
+    if not output_path.is_absolute():
+        output_path = root / output_path
+
+    try:
+        selected, fragments = env_utils.generate_env_file(
+            profiles,
+            output_path=output_path,
+            root=root,
+        )
+    except ValueError as exc:
+        print_color(str(exc), Colors.RED)
+        return False
+
+    print_color(f"Wrote {output_path}", Colors.GREEN)
+    if fragments:
+        print_color("Included fragments:", Colors.CYAN)
+        for fragment in fragments:
+            print(f"  {fragment.relative_to(root)}")
+    else:
+        print_color("No env fragments found.", Colors.YELLOW)
+    return True

@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from cli.config import discover_services
 from cli.commands import (
     cmd_list, cmd_start, cmd_stop, cmd_restart, cmd_status,
-    cmd_logs, cmd_build, cmd_clean, cmd_nuke, cmd_shell, cmd_test,
+    cmd_logs, cmd_build, cmd_clean, cmd_nuke, cmd_shell, cmd_test, cmd_env,
 )
 from cli.ui import interactive_mode
 
@@ -62,6 +62,12 @@ Examples:
     shell_parser.add_argument("service", nargs="?", help="Service name")
 
     subparsers.add_parser("test", help="Run health checks")
+    env_parser = subparsers.add_parser("env", help="Generate .env from fragments")
+    env_parser.add_argument(
+        "--output", "-o",
+        default=".env.example",
+        help="Output path for generated env file",
+    )
 
     args = parser.parse_args()
 
@@ -116,6 +122,10 @@ Examples:
 
     elif args.command == "test":
         success = cmd_test()
+        return 0 if success else 1
+
+    elif args.command == "env":
+        success = cmd_env(profiles or all_profiles, args.output)
         return 0 if success else 1
 
     return 0

@@ -47,6 +47,7 @@ A modular, containerized analytics platform. Pick the services you need - databa
 ./ecosystem shell <service>              # Open shell in container
 ./ecosystem build                        # Build service images
 ./ecosystem clean                        # Stop and remove all volumes (data reset)
+./ecosystem env --output .env            # Generate an env file from fragments
 ```
 
 ## Architecture
@@ -130,6 +131,21 @@ cp .env.example .env
 ```
 
 The CLI reads `.env` to render service URLs, credentials, and health checks.
+
+### Service env fragments
+
+Each service can include a `services/<service>/env.example` fragment. Generate a
+consolidated file with the CLI:
+
+```bash
+# Generate a .env for specific services
+./ecosystem --profiles postgres,jupyter env --output .env
+
+# Generate a full example for all services
+./ecosystem env --output .env.example
+```
+
+Shared settings live in `env/common.env` and are included automatically.
 
 ## Service Details
 
