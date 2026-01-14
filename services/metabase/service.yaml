@@ -1,10 +1,10 @@
 name: Metabase
 category: visualization
-port: 3000
-url: "http://localhost:3000"
-credentials: "admin@localhost / ecosystem"
+port: "${METABASE_PORT:-3000}"
+url: "http://localhost:${METABASE_PORT:-3000}"
+credentials: "${MB_ADMIN_EMAIL:-admin@localhost} / ${MB_ADMIN_PASSWORD:-ecosystem}"
 startup_time: 60
 
 healthcheck:
   type: http
-  endpoint: "http://localhost:3000/api/health"
+  endpoint: "http://localhost:${METABASE_PORT:-3000}/api/health"

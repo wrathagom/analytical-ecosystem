@@ -99,6 +99,9 @@ analytical-ecosystem/
      endpoint: "http://localhost:8000/health"
    ```
 
+   You can use `${VAR:-default}` placeholders in `service.yaml`. The CLI expands them
+   from `.env` and your shell environment so URLs and health checks stay in sync.
+
 3. Add the service to `orchestration/docker/docker-compose.yml`
 
 4. The CLI will auto-discover it on next run
@@ -125,6 +128,8 @@ Copy `.env.example` to `.env` to customize ports, credentials, etc:
 ```bash
 cp .env.example .env
 ```
+
+The CLI reads `.env` to render service URLs, credentials, and health checks.
 
 ## Service Details
 

@@ -1,8 +1,14 @@
 name: MySQL
 category: database
-port: 3306
-url: "localhost:3306"
+port: "${MYSQL_PORT:-3306}"
+url: "localhost:${MYSQL_PORT:-3306}"
 
 healthcheck:
   type: exec
-  command: ["mysqladmin", "ping", "-h", "localhost"]
+  command:
+    - mysqladmin
+    - ping
+    - -h
+    - localhost
+    - -P
+    - ${MYSQL_PORT:-3306}

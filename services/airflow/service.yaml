@@ -1,10 +1,10 @@
 name: Airflow
 category: orchestration
-port: 8080
-url: "http://localhost:8080"
-credentials: "admin/admin"
+port: "${AIRFLOW_PORT:-8080}"
+url: "http://localhost:${AIRFLOW_PORT:-8080}"
+credentials: "${AIRFLOW_USER:-admin}/${AIRFLOW_PASSWORD:-admin}"
 startup_time: 60
 
 healthcheck:
   type: http
-  endpoint: "http://localhost:8080/health"
+  endpoint: "http://localhost:${AIRFLOW_PORT:-8080}/health"

@@ -1,8 +1,13 @@
 name: PostgreSQL
 category: database
-port: 5432
-url: "localhost:5432"
+port: "${POSTGRES_PORT:-5432}"
+url: "localhost:${POSTGRES_PORT:-5432}"
 
 healthcheck:
   type: exec
-  command: ["pg_isready", "-U", "analyticsUser", "-d", "analytics"]
+  command:
+    - pg_isready
+    - -U
+    - ${POSTGRES_USER:-analyticsUser}
+    - -d
+    - ${POSTGRES_DB:-analytics}

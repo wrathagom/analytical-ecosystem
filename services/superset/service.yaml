@@ -1,12 +1,12 @@
 name: Apache Superset
 category: visualization
-port: 8088
-url: "http://localhost:8088"
-credentials: "admin / admin"
+port: "${SUPERSET_PORT:-8088}"
+url: "http://localhost:${SUPERSET_PORT:-8088}"
+credentials: "${SUPERSET_ADMIN_USER:-admin} / ${SUPERSET_ADMIN_PASSWORD:-admin}"
 startup_time: 90
 depends_on:
   - redis
 
 healthcheck:
   type: http
-  endpoint: "http://localhost:8088/health"
+  endpoint: "http://localhost:${SUPERSET_PORT:-8088}/health"
