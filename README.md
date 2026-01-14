@@ -169,9 +169,18 @@ es = Elasticsearch("http://elasticsearch:9200")
 
 - Docker and Docker Compose
 - Python 3.10+ (for CLI, auto-creates venv on first run)
+- Optional: install test dependencies with `pip install -r requirements-dev.txt`
 
 ## Future Plans
 
 - Kubernetes orchestration (`orchestration/kubernetes/`)
 - Additional services (Superset, Prefect, etc.)
 - Pre-built example pipelines
+
+## Development
+
+Run the test suite:
+
+```bash
+pytest
+```
