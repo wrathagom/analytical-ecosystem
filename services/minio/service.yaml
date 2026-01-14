@@ -1,0 +1,9 @@
+name: MinIO
+category: storage
+port: "${MINIO_PORT:-9000}"
+url: "http://localhost:${MINIO_PORT:-9000}"
+credentials: "${MINIO_ROOT_USER:-minioadmin}/${MINIO_ROOT_PASSWORD:-minioadmin}"
+
+healthcheck:
+  type: http
+  endpoint: "http://localhost:${MINIO_PORT:-9000}/minio/health/live"

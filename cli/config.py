@@ -11,6 +11,7 @@ import yaml
 # Category display configuration
 CATEGORIES = {
     "database": "Databases",
+    "storage": "Storage",
     "cache": "Cache",
     "search": "Search & Analytics",
     "notebook": "Notebooks",
@@ -20,7 +21,15 @@ CATEGORIES = {
 }
 
 # Category display order
-CATEGORY_ORDER = ["database", "cache", "search", "notebook", "visualization", "orchestration"]
+CATEGORY_ORDER = [
+    "database",
+    "storage",
+    "cache",
+    "search",
+    "notebook",
+    "visualization",
+    "orchestration",
+]
 
 
 @dataclass

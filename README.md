@@ -24,6 +24,7 @@ A modular, containerized analytics platform. Pick the services you need - databa
 |----------|---------|------|-------------|
 | **Database** | PostgreSQL | 5432 | Relational database |
 | **Database** | MySQL | 3306 | Relational database |
+| **Storage** | MinIO | 9000/9001 | S3-compatible object storage |
 | **Cache** | Redis | 6379 | In-memory data store |
 | **Search** | Elasticsearch | 9200 | Search and analytics engine |
 | **Search** | Kibana | 5601 | Elasticsearch visualization |
@@ -92,7 +93,7 @@ analytical-ecosystem/
 2. Add a `service.yaml`:
    ```yaml
    name: My Service
-   category: visualization  # database, cache, search, notebook, visualization, orchestration
+   category: visualization  # database, storage, cache, search, notebook, visualization, orchestration
    port: 8000
    url: "http://localhost:8000"
 
