@@ -2,3 +2,7 @@ name: Big Beautiful Screens
 category: visualization
 port: "${BBS_PORT:-8000}"
 url: "http://localhost:${BBS_PORT:-8000}"
+
+healthcheck:
+  type: http
+  endpoint: "http://localhost:${BBS_PORT:-8000}/admin/screens"
