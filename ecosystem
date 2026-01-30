@@ -2,13 +2,31 @@
 # Wrapper script that runs the Python CLI with the correct virtual environment
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VENV_PYTHON="$SCRIPT_DIR/.venv/bin/python3"
+VENV_DIR="$SCRIPT_DIR/.venv"
+VENV_PYTHON="$VENV_DIR/bin/python3"
+VENV_PIP="$VENV_DIR/bin/pip"
+
+create_venv() {
+    echo "Setting up virtual environment..."
+    python3 -m venv "$VENV_DIR"
+    "$VENV_PYTHON" -m ensurepip --upgrade >/dev/null 2>&1 || true
+    "$VENV_PYTHON" -m pip install -q -r "$SCRIPT_DIR/requirements.txt"
+}
 
 # Check if venv exists
 if [[ ! -f "$VENV_PYTHON" ]]; then
-    echo "Setting up virtual environment..."
-    python3 -m venv "$SCRIPT_DIR/.venv"
-    "$SCRIPT_DIR/.venv/bin/pip" install -q -r "$SCRIPT_DIR/requirements.txt"
+    create_venv
+else
+    # Repair venv if pip is missing or broken (can happen after system Python updates)
+    if ! "$VENV_PYTHON" -m pip --version >/dev/null 2>&1; then
+        echo "Repairing virtual environment..."
+        create_venv
+    fi
+    # Ensure dependencies are installed in the existing venv
+    if ! "$VENV_PYTHON" -c "import yaml" >/dev/null 2>&1; then
+        echo "Installing Python dependencies..."
+        "$VENV_PYTHON" -m pip install -q -r "$SCRIPT_DIR/requirements.txt"
+    fi
 fi
 
 exec "$VENV_PYTHON" "$SCRIPT_DIR/ecosystem.py" "$@"
