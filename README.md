@@ -49,8 +49,11 @@ Optional: generate a tailored env file before you start:
 | **Visualization** | Metabase | 3000 | Business intelligence dashboards |
 | **Visualization** | Big Beautiful Screens | 8000 | Real-time display dashboards |
 | **Visualization** | Grafana | 3001 | Metrics and monitoring dashboards |
+| **Visualization** | Apache Superset | 8088 | Data exploration and dashboards |
 | **Orchestration** | Airflow | 8080 | Workflow orchestration with Docker operator |
 | **Orchestration** | Ofelia | - | Lightweight cron scheduler |
+| **Orchestration** | n8n | 5678 | Workflow automation |
+| **Orchestration** | Node-RED | 1880 | Low-code flow editor |
 
 ## CLI Commands
 
@@ -126,6 +129,9 @@ analytical-ecosystem/
 3. Add the service to `orchestration/docker/docker-compose.yml`
 
 4. The CLI will auto-discover it on next run
+
+The CLI reports basic config warnings (missing `name`/`category`, invalid healthcheck config)
+when you run `./ecosystem list` or `./ecosystem start`.
 
 ## Shared Directories
 

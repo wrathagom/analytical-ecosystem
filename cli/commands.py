@@ -29,6 +29,41 @@ def print_color(text: str, color: str = ""):
     print(f"{color}{text}{Colors.NC}")
 
 
+CONTAINER_PREFIX = "analytical-ecosystem-"
+
+
+def container_to_service_id(container_name: str) -> str:
+    """Extract service id from a compose container name."""
+    name = container_name
+    if name.startswith(CONTAINER_PREFIX):
+        name = name[len(CONTAINER_PREFIX):]
+    if "-" in name:
+        return name.rsplit("-", 1)[0]
+    return name
+
+
+def print_service_warnings(
+    services: dict[str, Service],
+    profiles: Optional[list[str]] = None,
+) -> None:
+    """Print validation warnings for selected services."""
+    selected = profiles or list(services.keys())
+    warnings: list[str] = []
+
+    for service_id in selected:
+        service = services.get(service_id)
+        if not service or not service.warnings:
+            continue
+        for warning in service.warnings:
+            warnings.append(f"{service_id}: {warning}")
+
+    if warnings:
+        print_color("Service config warnings:", Colors.YELLOW)
+        for warning in warnings:
+            print(f"  - {warning}")
+        print()
+
+
 def cmd_list():
     """List all available services."""
     services = discover_services()
@@ -44,6 +79,8 @@ def cmd_list():
             print(f"    {svc.id} - {svc.name}{deps}")
         print()
 
+    print_service_warnings(services)
+
 
 def cmd_start(profiles: list[str]):
     """Start selected services."""
@@ -52,6 +89,7 @@ def cmd_start(profiles: list[str]):
         return False
 
     services = discover_services()
+    print_service_warnings(services, profiles)
 
     print_color(f"Starting services: {', '.join(profiles)}", Colors.CYAN)
     print()
@@ -109,7 +147,7 @@ def cmd_status():
     print("-" * 80)
 
     for container in containers:
-        name = container["name"].replace("analytical-ecosystem-", "").rstrip("-1")
+        name = container_to_service_id(container["name"])
         print(f"{name:<40} {container['status']:<25} {container['ports']}")
 
 
@@ -202,7 +240,7 @@ def cmd_shell(service: str):
 
         print_color("Available running services:", Colors.YELLOW)
         for c in containers:
-            name = c["name"].replace("analytical-ecosystem-", "").rstrip("-1")
+            name = container_to_service_id(c["name"])
             print(f"  {name}")
         print()
 
@@ -257,7 +295,7 @@ def cmd_test():
     # Run service-specific health checks
     for container in containers:
         name = container["name"]
-        service_id = name.replace("analytical-ecosystem-", "").split("-")[0]
+        service_id = container_to_service_id(name)
 
         if service_id not in services:
             continue

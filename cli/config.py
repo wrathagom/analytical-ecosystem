@@ -51,6 +51,7 @@ class Service:
     startup_time: int = 30
     description: Optional[str] = None
     healthcheck: Optional[HealthCheck] = None
+    warnings: list[str] = field(default_factory=list)
     path: Optional[Path] = None
 
     @property
@@ -121,6 +122,30 @@ def expand_config(value, env: dict[str, str]):
     return value
 
 
+def validate_service_config(service_id: str, config: dict) -> list[str]:
+    """Validate service config and return warnings."""
+    warnings: list[str] = []
+
+    if not config.get("name"):
+        warnings.append("missing 'name' (defaulting to title case)")
+    if not config.get("category"):
+        warnings.append("missing 'category' (defaulting to 'other')")
+
+    if "healthcheck" in config:
+        hc = config.get("healthcheck") or {}
+        hc_type = hc.get("type", "http")
+        if hc_type not in {"http", "exec"}:
+            warnings.append(f"unknown healthcheck type '{hc_type}'")
+        elif hc_type == "http":
+            if not hc.get("endpoint"):
+                warnings.append("healthcheck.type=http missing 'endpoint'")
+        elif hc_type == "exec":
+            if not hc.get("command"):
+                warnings.append("healthcheck.type=exec missing 'command'")
+
+    return warnings
+
+
 def discover_services(root: Optional[Path] = None) -> dict[str, Service]:
     """Discover all services from services/*/service.yaml files."""
     if root is None:
@@ -147,6 +172,8 @@ def discover_services(root: Optional[Path] = None) -> dict[str, Service]:
 
         service_id = service_path.name
 
+        warnings = validate_service_config(service_id, config)
+
         healthcheck = None
         if "healthcheck" in config:
             hc = config["healthcheck"]
@@ -161,6 +188,7 @@ def discover_services(root: Optional[Path] = None) -> dict[str, Service]:
             try:
                 port = int(port.strip())
             except ValueError:
+                warnings.append(f"port '{port}' is not an integer; ignoring")
                 port = None
 
         services[service_id] = Service(
@@ -174,6 +202,7 @@ def discover_services(root: Optional[Path] = None) -> dict[str, Service]:
             startup_time=config.get("startup_time", 30),
             description=config.get("description"),
             healthcheck=healthcheck,
+            warnings=warnings,
             path=service_path,
         )
 

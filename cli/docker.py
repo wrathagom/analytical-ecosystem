@@ -157,17 +157,22 @@ def clean_services(profiles: list[str]) -> bool:
 
 def nuclear_clean(profiles: list[str]) -> bool:
     """Complete reset - remove containers, volumes, images, networks."""
-    compose_dir = get_compose_dir()
-
     # Stop and remove everything including images
     result = compose_command(["down", "-v", "--rmi", "all", "--remove-orphans"], profiles)
 
     # Also remove any dangling volumes with our project name
-    subprocess.run(
+    volume_result = subprocess.run(
         ["docker", "volume", "ls", "-q", "-f", "name=analytical-ecosystem"],
         capture_output=True,
         text=True,
     )
+    volumes = [line.strip() for line in volume_result.stdout.splitlines() if line.strip()]
+    if volumes:
+        subprocess.run(
+            ["docker", "volume", "rm", *volumes],
+            capture_output=True,
+            text=True,
+        )
 
     # Remove the network if it exists
     subprocess.run(

@@ -10,7 +10,8 @@ services:
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       NODERED_USER: ${NODERED_USER:-admin}
-      NODERED_PASSWORD_HASH: ${NODERED_PASSWORD_HASH:-$$2b$$08$$K3WmJkPM5RfDR7kuBvGn4eYKGlFmxLVdBNwMBwVH8GdNzDqLT0Wdm}
+      NODERED_PASSWORD: ${NODERED_PASSWORD:-ecosystem}
+      NODERED_PASSWORD_HASH: ${NODERED_PASSWORD_HASH:-}
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:1880 || exit 1"]
       interval: 30s

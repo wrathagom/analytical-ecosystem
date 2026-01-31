@@ -48,6 +48,13 @@ def test_cmd_start_prints_urls(monkeypatch: pytest.MonkeyPatch, capsys: pytest.C
     assert "PostgreSQL: http://localhost:5432 (user/pass)" in out
 
 
+def test_container_to_service_id_handles_hyphens() -> None:
+    assert (
+        commands.container_to_service_id("analytical-ecosystem-big-beautiful-screens-1")
+        == "big-beautiful-screens"
+    )
+
+
 def test_cmd_status_no_containers(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
