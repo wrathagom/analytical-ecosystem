@@ -1,8 +1,10 @@
 """CLI command implementations."""
 
 import subprocess
+import sys
 import urllib.request
 import urllib.error
+from datetime import datetime, timedelta
 from typing import Optional
 from pathlib import Path
 
@@ -18,6 +20,7 @@ class Colors:
     BLUE = "\033[0;34m"
     CYAN = "\033[0;36m"
     BOLD = "\033[1m"
+    DIM = "\033[2m"
     NC = "\033[0m"  # No Color
 
 
@@ -327,3 +330,201 @@ def cmd_env(profiles: list[str], output: str) -> bool:
     else:
         print_color("No env fragments found.", Colors.YELLOW)
     return True
+
+
+def cmd_seed(args) -> bool:
+    """Seed database with fake data."""
+    from .seed import get_backend, get_schema, create_generator, list_schemas
+    from .seed.normalizer import DataNormalizer
+
+    db = args.db
+    data_type = args.type
+    count = args.count
+    batch_size = args.batch_size
+    normalize = args.normalize
+    clear = getattr(args, 'clear', False)
+
+    # Parse dates
+    if args.start:
+        try:
+            start_date = datetime.strptime(args.start, "%Y-%m-%d")
+        except ValueError:
+            print_color(f"Invalid start date format: {args.start}. Use YYYY-MM-DD.", Colors.RED)
+            return False
+    else:
+        start_date = datetime.now() - timedelta(days=365)
+
+    if args.end:
+        try:
+            end_date = datetime.strptime(args.end, "%Y-%m-%d")
+        except ValueError:
+            print_color(f"Invalid end date format: {args.end}. Use YYYY-MM-DD.", Colors.RED)
+            return False
+    else:
+        end_date = datetime.now()
+
+    # Validate data type
+    valid_types = [name for name, _ in list_schemas()]
+    if data_type not in valid_types:
+        print_color(f"Invalid data type: {data_type}", Colors.RED)
+        print(f"Available types: {', '.join(valid_types)}")
+        return False
+
+    # Get backend and schema
+    try:
+        backend = get_backend(db)
+        schema = get_schema(data_type)
+    except ValueError as e:
+        print_color(str(e), Colors.RED)
+        return False
+
+    # Check normalization support
+    if normalize and not backend.supports_normalization:
+        print_color(f"Normalization not supported for {db}. Using flat mode.", Colors.YELLOW)
+        normalize = False
+
+    normalizer = DataNormalizer() if normalize else None
+
+    print_color(f"Seeding {db} with {count} {data_type} records...", Colors.CYAN)
+    print(f"  Time range: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
+    print(f"  Normalize: {normalize}")
+    if clear:
+        print(f"  Clear existing: Yes")
+    print()
+
+    try:
+        # Connect
+        backend.connect()
+
+        # Clear existing data if requested
+        if clear:
+            table_name = schema.table_name
+            if normalize:
+                table_name = f"{schema.table_name}_normalized"
+            print_color(f"Clearing existing data from {table_name}...", Colors.YELLOW)
+            try:
+                backend.drop_table(table_name)
+                if normalize:
+                    # Also clear normalized entity tables if they exist
+                    backend.drop_table("customers")
+                    backend.drop_table("products_normalized")
+            except Exception:
+                pass  # Tables might not exist yet
+
+        # Create tables
+        if normalize:
+            backend.create_normalized_tables()
+
+        backend.create_table(schema, normalized=normalize)
+
+        # Generate data
+        generator = create_generator(data_type, start_date, end_date)
+
+        # For normalized mode, we need to generate all records first,
+        # extract entities, insert them, then insert main records
+        if normalize and normalizer:
+            print("Generating records...")
+            all_batches = list(generator.generate_batches(count, batch_size))
+
+            # Normalize all records to extract entities
+            normalized_batches = []
+            for batch in all_batches:
+                normalized_batch = [normalizer.normalize_record(r, data_type) for r in batch]
+                normalized_batches.append(normalized_batch)
+
+            # Insert normalized entities FIRST (before main records with foreign keys)
+            customers = normalizer.get_customers_table()
+            products = normalizer.get_products_table()
+
+            if customers or products:
+                print("Inserting normalized entities...")
+                backend.insert_normalized_entities(customers, products)
+                if customers:
+                    print(f"  Created {len(customers)} unique customers")
+                if products:
+                    print(f"  Created {len(products)} unique products")
+                print()
+
+            # Now insert main records
+            total_inserted = 0
+            total_batches = len(normalized_batches)
+
+            for batch_num, batch in enumerate(normalized_batches, 1):
+                inserted = backend.insert_batch(schema, batch, normalized=normalize)
+                total_inserted += inserted
+
+                # Progress
+                progress = batch_num / total_batches
+                bar_width = 40
+                filled = int(bar_width * progress)
+                bar = "█" * filled + "░" * (bar_width - filled)
+                percent = int(progress * 100)
+
+                sys.stdout.write(f"\r[{bar}] {percent}% ({total_inserted}/{count})")
+                sys.stdout.flush()
+        else:
+            # Non-normalized mode: generate and insert in batches
+            total_inserted = 0
+            batch_num = 0
+            total_batches = (count + batch_size - 1) // batch_size
+
+            for batch in generator.generate_batches(count, batch_size):
+                batch_num += 1
+
+                inserted = backend.insert_batch(schema, batch, normalized=False)
+                total_inserted += inserted
+
+                # Progress
+                progress = batch_num / total_batches
+                bar_width = 40
+                filled = int(bar_width * progress)
+                bar = "█" * filled + "░" * (bar_width - filled)
+                percent = int(progress * 100)
+
+                sys.stdout.write(f"\r[{bar}] {percent}% ({total_inserted}/{count})")
+                sys.stdout.flush()
+
+        print()
+        print()
+
+        # Final count
+        table_name = schema.table_name
+        if normalize:
+            table_name = f"{schema.table_name}_normalized"
+
+        final_count = backend.get_count(table_name)
+
+        print_color(f"✓ Inserted {total_inserted} records into '{table_name}'", Colors.GREEN)
+        print(f"  Total records in table: {final_count}")
+
+        # Display connection info
+        conn_info = backend.get_connection_info()
+        if conn_info:
+            print()
+            print_color("Connection info:", Colors.CYAN)
+            if "database" in conn_info:
+                print(f"  Database: {conn_info['database']}")
+            if "host" in conn_info:
+                print(f"  Host: {conn_info['host']}:{conn_info['port']}")
+            if "user" in conn_info:
+                print(f"  User: {conn_info['user']}")
+            if "password" in conn_info:
+                print(f"  Password: {conn_info['password']}")
+            if "url" in conn_info:
+                print(f"  URL: {conn_info['url']}")
+            if "connect_cmd" in conn_info:
+                print()
+                print_color("Connect with:", Colors.DIM)
+                print(f"  {conn_info['connect_cmd']}")
+
+        backend.disconnect()
+        return True
+
+    except ImportError as e:
+        print_color(f"Missing dependency: {e}", Colors.RED)
+        print_color("Install required packages: pip install -r requirements.txt", Colors.YELLOW)
+        return False
+
+    except Exception as e:
+        print_color(f"Error: {e}", Colors.RED)
+        return False

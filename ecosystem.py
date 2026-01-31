@@ -6,16 +6,23 @@ Manage Docker Compose services for the analytical ecosystem.
 """
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
 # Add the project root to the path
-sys.path.insert(0, str(Path(__file__).parent))
+PROJECT_ROOT = Path(__file__).parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+# Check if we're running in the venv; if not, re-exec with venv python
+VENV_PYTHON = PROJECT_ROOT / ".venv" / "bin" / "python"
+if VENV_PYTHON.exists() and sys.executable != str(VENV_PYTHON):
+    os.execv(str(VENV_PYTHON), [str(VENV_PYTHON)] + sys.argv)
 
 from cli.config import discover_services
 from cli.commands import (
     cmd_list, cmd_start, cmd_stop, cmd_restart, cmd_status,
-    cmd_logs, cmd_build, cmd_clean, cmd_nuke, cmd_shell, cmd_test, cmd_env,
+    cmd_logs, cmd_build, cmd_clean, cmd_nuke, cmd_shell, cmd_test, cmd_env, cmd_seed,
 )
 from cli.ui import interactive_mode
 from cli import docker
@@ -73,6 +80,50 @@ Examples:
         "--output", "-o",
         default=".env.example",
         help="Output path for generated env file",
+    )
+
+    seed_parser = subparsers.add_parser("seed", help="Seed database with fake data")
+    seed_parser.add_argument(
+        "--db", "-d",
+        required=True,
+        choices=["postgres", "mysql", "elasticsearch"],
+        help="Database service to seed",
+    )
+    seed_parser.add_argument(
+        "--type", "-t",
+        required=True,
+        choices=["contacts", "sales_orders", "manufacturing_orders", "products", "invoices"],
+        help="Type of data to generate",
+    )
+    seed_parser.add_argument(
+        "--count", "-n",
+        type=int,
+        default=1000,
+        help="Number of records to generate (default: 1000)",
+    )
+    seed_parser.add_argument(
+        "--start",
+        help="Start date for time field (YYYY-MM-DD, default: 1 year ago)",
+    )
+    seed_parser.add_argument(
+        "--end",
+        help="End date for time field (YYYY-MM-DD, default: today)",
+    )
+    seed_parser.add_argument(
+        "--normalize",
+        action="store_true",
+        help="Enable normalization (PostgreSQL/MySQL only)",
+    )
+    seed_parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=100,
+        help="Records per batch (default: 100)",
+    )
+    seed_parser.add_argument(
+        "--clear",
+        action="store_true",
+        help="Clear existing data before seeding",
     )
 
     args = parser.parse_args()
@@ -133,6 +184,10 @@ Examples:
 
     elif args.command == "env":
         success = cmd_env(profiles or all_profiles, args.output)
+        return 0 if success else 1
+
+    elif args.command == "seed":
+        success = cmd_seed(args)
         return 0 if success else 1
 
     return 0

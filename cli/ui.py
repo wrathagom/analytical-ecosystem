@@ -208,6 +208,7 @@ def menu_services_running(
     print(f"  {Colors.BOLD}6{Colors.NC}) Rebuild services")
     print(f"  {Colors.BOLD}7{Colors.NC}) Restart services")
     print(f"  {Colors.BOLD}8{Colors.NC}) Stop services")
+    print(f"  {Colors.BOLD}9{Colors.NC}) Seed data")
     print(f"  {Colors.BOLD}q{Colors.NC}) Quit")
     print()
 
@@ -249,6 +250,10 @@ def menu_services_running(
 
     elif choice == "8":
         stop_menu(running, all_profiles)
+
+    elif choice == "9":
+        from .seed.ui import seed_data_menu
+        seed_data_menu()
 
     return True
 
