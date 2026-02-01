@@ -1,0 +1,9 @@
+{
+  "plugins": {
+    "datasette-parquet": {
+      "duckdb": {
+        "file": "/data/duckdb.db"
+      }
+    }
+  }
+}

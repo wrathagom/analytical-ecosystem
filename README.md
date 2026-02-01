@@ -41,15 +41,19 @@ Optional: generate a tailored env file before you start:
 |----------|---------|------|-------------|
 | **Database** | PostgreSQL | 5432 | Relational database |
 | **Database** | MySQL | 3306 | Relational database |
+| **Database** | DuckDB | - | Embedded analytics database (CLI container) |
 | **Storage** | MinIO | 9000/9001 | S3-compatible object storage |
 | **Cache** | Redis | 6379 | In-memory data store |
 | **Search** | Elasticsearch | 9200 | Search and analytics engine |
 | **Search** | Kibana | 5601 | Elasticsearch visualization |
 | **Notebook** | JupyterLab | 8888 | Interactive notebooks with Python, R, Julia |
+| **Data Quality** | Great Expectations | - | Data quality checks and validation |
 | **Visualization** | Metabase | 3000 | Business intelligence dashboards |
 | **Visualization** | Big Beautiful Screens | 8000 | Real-time display dashboards |
 | **Visualization** | Grafana | 3001 | Metrics and monitoring dashboards |
 | **Visualization** | Apache Superset | 8088 | Data exploration and dashboards |
+| **Visualization** | SQLPad | 3002 | Web-based SQL editor |
+| **Visualization** | Datasette | 8001 | Browse SQLite/DuckDB files |
 | **Orchestration** | Airflow | 8080 | Workflow orchestration with Docker operator |
 | **Orchestration** | Ofelia | - | Lightweight cron scheduler |
 | **Orchestration** | n8n | 5678 | Workflow automation |
@@ -114,7 +118,7 @@ analytical-ecosystem/
 2. Add a `service.yaml`:
    ```yaml
    name: My Service
-   category: visualization  # database, storage, cache, search, notebook, visualization, orchestration
+   category: visualization  # database, storage, cache, search, notebook, data-quality, visualization, orchestration
    port: 8000
    url: "http://localhost:8000"
 
@@ -142,6 +146,7 @@ The `shared/` directory is mounted into relevant containers:
 | `shared/dags/` | Airflow, Jupyter | `/opt/airflow/dags`, `/home/jovyan/work/dags` |
 | `shared/notebooks/` | Jupyter | `/home/jovyan/work/notebooks` |
 | `shared/data/` | Jupyter | `/home/jovyan/work/data` |
+| `shared/great_expectations/` | Great Expectations | `/gx` |
 
 This means you can:
 - Edit DAGs from your host machine OR from Jupyter

@@ -3,3 +3,4 @@ Faker>=22.0.0
 psycopg2-binary>=2.9.9
 pymysql>=1.1.0
 elasticsearch>=8.0.0
+duckdb>=0.10.0

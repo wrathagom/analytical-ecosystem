@@ -3,9 +3,11 @@
 import os
 import sys
 import webbrowser
+import subprocess
+from pathlib import Path
 from typing import Optional
 
-from .config import discover_services, get_services_by_category, CATEGORIES, Service
+from .config import discover_services, get_services_by_category, CATEGORIES, Service, get_project_root
 from . import docker
 
 
@@ -54,9 +56,33 @@ def wait_for_enter():
     input(f"\n{Colors.DIM}Press Enter to continue...{Colors.NC}")
 
 
+def install_dependencies():
+    """Install Python dependencies for the CLI."""
+    project_root = get_project_root()
+    requirements = project_root / "requirements.txt"
+
+    if not requirements.exists():
+        print_color("requirements.txt not found.", Colors.RED)
+        wait_for_enter()
+        return
+
+    print_color("Installing Python dependencies...", Colors.CYAN)
+    print()
+    result = subprocess.run(
+        [sys.executable, "-m", "pip", "install", "-r", str(requirements)],
+        cwd=project_root,
+    )
+    print()
+    if result.returncode == 0:
+        print_color("Dependencies installed.", Colors.GREEN)
+    else:
+        print_color("Dependency install failed.", Colors.RED)
+    wait_for_enter()
+
+
 def get_running_services(services: dict[str, Service]) -> list[dict]:
     """Get list of running services with their details."""
-    containers = docker.get_running_containers()
+    containers = docker.get_containers(include_all=True)
     running = []
 
     for container in containers:
@@ -65,6 +91,7 @@ def get_running_services(services: dict[str, Service]) -> list[dict]:
         service_id = name.replace("analytical-ecosystem-", "").rsplit("-", 1)[0]
 
         health = docker.get_container_health(name)
+        status = docker.get_container_status(name)
 
         service = services.get(service_id)
         if service:
@@ -72,6 +99,8 @@ def get_running_services(services: dict[str, Service]) -> list[dict]:
                 "id": service_id,
                 "name": service.name,
                 "health": health,
+                "status": status,
+                "has_healthcheck": service.healthcheck is not None,
                 "url": service.url,
                 "credentials": service.credentials,
                 "container": name,
@@ -92,6 +121,12 @@ def print_running_services(running: list[dict]):
         elif svc["health"] == "unhealthy":
             icon = f"{Colors.RED}✗{Colors.NC}"
             status = f"{Colors.RED}unhealthy{Colors.NC}"
+        elif svc.get("status", "").startswith("Exited"):
+            icon = f"{Colors.RED}✗{Colors.NC}"
+            status = f"{Colors.RED}exited{Colors.NC}"
+        elif not svc.get("has_healthcheck") and svc.get("status") == "running":
+            icon = f"{Colors.GREEN}●{Colors.NC}"
+            status = f"{Colors.GREEN}available{Colors.NC}"
         else:
             icon = f"{Colors.YELLOW}~{Colors.NC}"
             status = f"{Colors.YELLOW}starting{Colors.NC}"
@@ -122,6 +157,7 @@ def menu_no_services(services: dict[str, Service], all_profiles: list[str]) -> b
     print(f"  {Colors.BOLD}1{Colors.NC}) Start services")
     print(f"  {Colors.BOLD}2{Colors.NC}) Build images")
     print(f"  {Colors.BOLD}3{Colors.NC}) Nuclear clean (remove everything)")
+    print(f"  {Colors.BOLD}4{Colors.NC}) Install Python dependencies")
     print(f"  {Colors.BOLD}q{Colors.NC}) Quit")
     print()
 
@@ -144,15 +180,23 @@ def menu_no_services(services: dict[str, Service], all_profiles: list[str]) -> b
     elif choice == "3":
         nuclear_clean_prompt(all_profiles)
 
+    elif choice == "4":
+        install_dependencies()
+
     return True
 
 
-def handle_service_selection(services: dict[str, Service]):
+def handle_service_selection(services: dict[str, Service], running_ids: Optional[set[str]] = None):
     """Handle the service selection and action flow."""
     current_selection: set[str] = set()
+    running_ids = running_ids or set()
 
     while True:
-        selected, action, current_selection = service_selector(services, current_selection)
+        selected, action, current_selection = service_selector(
+            services,
+            current_selection,
+            running_ids,
+        )
 
         if action == "edit":
             # User wants to edit selection, loop back with current selection
@@ -209,6 +253,7 @@ def menu_services_running(
     print(f"  {Colors.BOLD}7{Colors.NC}) Restart services")
     print(f"  {Colors.BOLD}8{Colors.NC}) Stop services")
     print(f"  {Colors.BOLD}9{Colors.NC}) Seed data")
+    print(f"  {Colors.BOLD}0{Colors.NC}) Install Python dependencies")
     print(f"  {Colors.BOLD}q{Colors.NC}) Quit")
     print()
 
@@ -232,15 +277,8 @@ def menu_services_running(
         wait_for_enter()
 
     elif choice == "5":
-        # Filter out already running services
         running_ids = {r["id"] for r in running}
-        available = {k: v for k, v in services.items() if k not in running_ids}
-
-        if not available:
-            print_color("\nAll services are already running.", Colors.YELLOW)
-            wait_for_enter()
-        else:
-            handle_service_selection(available)
+        handle_service_selection(services, running_ids)
 
     elif choice == "6":
         rebuild_menu(running, all_profiles)
@@ -255,6 +293,9 @@ def menu_services_running(
         from .seed.ui import seed_data_menu
         seed_data_menu()
 
+    elif choice == "0":
+        install_dependencies()
+
     return True
 
 
@@ -264,7 +305,8 @@ def menu_services_running(
 
 def service_selector(
     services: dict[str, Service],
-    initial_selection: set[str] = None
+    initial_selection: set[str] = None,
+    running_ids: Optional[set[str]] = None,
 ) -> tuple[list[str], str, set[str]]:
     """
     Interactive service selector.
@@ -274,6 +316,7 @@ def service_selector(
     by_category = get_services_by_category(services)
     selected: set[str] = set(initial_selection) if initial_selection else set()
     idx_to_profile: dict[int, str] = {}
+    running_ids = running_ids or set()
 
     while True:
         clear_screen()
@@ -294,8 +337,9 @@ def service_selector(
                 deps = ""
                 if svc.depends_on:
                     deps = f" {Colors.DIM}(requires: {', '.join(svc.depends_on)}){Colors.NC}"
+                status = f" {Colors.GREEN}[running]{Colors.NC}" if svc.id in running_ids else ""
 
-                print(f"  {checkbox} {Colors.BOLD}{idx}{Colors.NC}) {svc.name}{deps}")
+                print(f"  {checkbox} {Colors.BOLD}{idx}{Colors.NC}) {svc.name}{deps}{status}")
                 idx += 1
             print()
 

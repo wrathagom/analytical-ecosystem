@@ -21,6 +21,7 @@ SERVICE_TO_BACKEND = {
     "postgres": "postgres",
     "mysql": "mysql",
     "elasticsearch": "elasticsearch",
+    "duckdb": "duckdb",
 }
 
 
@@ -66,6 +67,7 @@ def select_database() -> Optional[str]:
         print("  - PostgreSQL (./ecosystem --profiles postgres start)")
         print("  - MySQL (./ecosystem --profiles mysql start)")
         print("  - Elasticsearch (./ecosystem --profiles elasticsearch start)")
+        print("  - DuckDB (./ecosystem --profiles duckdb start)")
         wait_for_enter()
         return None
 

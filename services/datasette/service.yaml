@@ -1,0 +1,9 @@
+name: Datasette
+category: visualization
+port: "${DATASETTE_PORT:-8001}"
+url: "http://localhost:${DATASETTE_PORT:-8001}"
+description: Explore and publish data from SQLite/DuckDB files
+
+healthcheck:
+  type: http
+  endpoint: "http://localhost:${DATASETTE_PORT:-8001}/"

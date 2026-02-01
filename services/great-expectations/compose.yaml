@@ -1,0 +1,15 @@
+services:
+  great-expectations:
+    build:
+      context: ./services/great-expectations
+    profiles: ["great-expectations"]
+    volumes:
+      - ./shared/data:/data
+      - ./shared/great_expectations:/gx
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+      GX_HOME: ${GX_HOME:-/gx}
+    working_dir: /gx
+    command: ["sleep", "infinity"]
+    networks:
+      - ecosystem

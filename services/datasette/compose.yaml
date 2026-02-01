@@ -1,0 +1,33 @@
+services:
+  datasette:
+    build:
+      context: ./services/datasette
+    image: ${DATASETTE_IMAGE:-datasette-duckdb:latest}
+    profiles: ["datasette"]
+    ports:
+      - "${DATASETTE_PORT:-8001}:8001"
+    volumes:
+      - ./shared/data:/data
+      - ./shared/datasette:/datasette
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+    command:
+      [
+        "sh",
+        "-c",
+        "if [ -f /datasette/metadata.json ]; then exec datasette -h 0.0.0.0 -p 8001 --metadata /datasette/metadata.json; else files=$(ls /data/*.sqlite /data/*.sqlite3 2>/dev/null || true); if [ -n \"$files\" ]; then exec datasette -h 0.0.0.0 -p 8001 $files; else exec datasette -h 0.0.0.0 -p 8001 --memory; fi; fi"
+      ]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys;urllib.request.urlopen('http://localhost:8001/',timeout=5);sys.exit(0)"
+        ]
+      start_period: 15s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - ecosystem

@@ -15,6 +15,7 @@ CATEGORIES = {
     "cache": "Cache",
     "search": "Search & Analytics",
     "notebook": "Notebooks",
+    "data-quality": "Data Quality",
     "visualization": "Visualization",
     "orchestration": "Orchestration",
     "other": "Other",
@@ -27,6 +28,7 @@ CATEGORY_ORDER = [
     "cache",
     "search",
     "notebook",
+    "data-quality",
     "visualization",
     "orchestration",
 ]

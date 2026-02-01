@@ -86,7 +86,7 @@ Examples:
     seed_parser.add_argument(
         "--db", "-d",
         required=True,
-        choices=["postgres", "mysql", "elasticsearch"],
+        choices=["postgres", "mysql", "elasticsearch", "duckdb"],
         help="Database service to seed",
     )
     seed_parser.add_argument(

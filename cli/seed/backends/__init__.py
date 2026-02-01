@@ -6,6 +6,7 @@ from .base import DatabaseBackend
 from .postgres import PostgresBackend
 from .mysql import MySQLBackend
 from .elasticsearch import ElasticsearchBackend
+from .duckdb import DuckDBBackend
 
 
 # Registry of available backends
@@ -13,6 +14,7 @@ BACKENDS: dict[str, Type[DatabaseBackend]] = {
     "postgres": PostgresBackend,
     "mysql": MySQLBackend,
     "elasticsearch": ElasticsearchBackend,
+    "duckdb": DuckDBBackend,
 }
 
 # Aliases for convenience
@@ -21,6 +23,7 @@ BACKEND_ALIASES: dict[str, str] = {
     "postgresql": "postgres",
     "es": "elasticsearch",
     "elastic": "elasticsearch",
+    "duck": "duckdb",
 }
 
 

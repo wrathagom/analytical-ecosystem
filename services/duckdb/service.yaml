@@ -1,0 +1,3 @@
+name: DuckDB
+category: database
+description: Embedded analytical database (CLI container)

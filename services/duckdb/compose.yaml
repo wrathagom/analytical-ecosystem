@@ -1,0 +1,12 @@
+services:
+  duckdb:
+    image: ${DUCKDB_IMAGE:-duckdb/duckdb:latest}
+    profiles: ["duckdb"]
+    volumes:
+      - ./shared/data:/data
+    working_dir: /data
+    command: ["duckdb"]
+    stdin_open: true
+    tty: true
+    networks:
+      - ecosystem

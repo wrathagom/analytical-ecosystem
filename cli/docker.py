@@ -195,15 +195,20 @@ def get_logs(profiles: list[str], service: Optional[str] = None, follow: bool = 
     compose_command(cmd, profiles)
 
 
-def get_running_containers() -> list[dict]:
-    """Get list of running containers in the ecosystem."""
-    # Try by project label first
-    result = subprocess.run(
+def get_containers(include_all: bool = False) -> list[dict]:
+    """Get list of containers in the ecosystem."""
+    cmd = ["docker", "ps"]
+    if include_all:
+        cmd.append("-a")
+    cmd.extend(
         [
-            "docker", "ps",
             "--filter", f"label=com.docker.compose.project={PROJECT_NAME}",
-            "--format", "{{.Names}}\t{{.Status}}\t{{.Ports}}"
-        ],
+            "--format", "{{.Names}}\t{{.Status}}\t{{.Ports}}",
+        ]
+    )
+
+    result = subprocess.run(
+        cmd,
         capture_output=True,
         text=True,
     )
@@ -219,8 +224,8 @@ def get_running_containers() -> list[dict]:
             "ports": parts[2] if len(parts) > 2 else "",
         })
 
-    # Also check by network if no results from label
-    if not containers:
+    # Also check by network if no results from label (for running containers only)
+    if not containers and not include_all:
         result = subprocess.run(
             [
                 "docker", "ps",
@@ -242,6 +247,11 @@ def get_running_containers() -> list[dict]:
             })
 
     return containers
+
+
+def get_running_containers() -> list[dict]:
+    """Get list of running containers in the ecosystem."""
+    return get_containers(include_all=False)
 
 
 def get_container_health(container_name: str) -> str:

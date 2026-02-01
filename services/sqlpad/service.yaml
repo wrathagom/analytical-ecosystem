@@ -1,0 +1,10 @@
+name: SQLPad
+category: visualization
+port: "${SQLPAD_PORT:-3002}"
+url: "http://localhost:${SQLPAD_PORT:-3002}"
+description: Web-based SQL editor and dashboard
+credentials: "${SQLPAD_ADMIN:-admin} / ${SQLPAD_ADMIN_PASSWORD:-ecosystem}"
+
+healthcheck:
+  type: http
+  endpoint: "http://localhost:${SQLPAD_PORT:-3002}/"
