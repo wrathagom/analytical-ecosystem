@@ -1,0 +1,8 @@
+name: Evidence
+category: visualization
+port: "${EVIDENCE_PORT:-3000}"
+url: "http://localhost:${EVIDENCE_PORT:-3000}"
+
+healthcheck:
+  type: http
+  endpoint: "http://localhost:${EVIDENCE_PORT:-3000}"
