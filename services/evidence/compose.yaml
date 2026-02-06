@@ -1,0 +1,18 @@
+services:
+  evidence:
+    image: evidencedev/evidence:latest
+    profiles: ["evidence"]
+    ports:
+      - "${EVIDENCE_PORT:-3000}:3000"
+    volumes:
+      - ./shared/evidence:/evidence/project
+      - ./shared/data:/data
+    environment:
+      TZ: ${TIMEZONE:-America/New_York}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - ecosystem

@@ -9,6 +9,7 @@ services:
       - ./shared/notebooks:/home/jovyan/work/notebooks
       - ./shared/dags:/home/jovyan/work/dags
       - ./shared/data:/home/jovyan/work/data
+      - ./shared/evidence:/home/jovyan/work/evidence
     environment:
       TZ: ${TIMEZONE:-America/New_York}
       JUPYTER_ENABLE_LAB: "yes"
