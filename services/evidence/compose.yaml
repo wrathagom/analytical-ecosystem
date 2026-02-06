@@ -7,9 +7,10 @@ services:
     volumes:
       - ./shared/evidence:/evidence-workspace
       - ./shared/data:/data
+      - ./services/evidence/entrypoint.sh:/entrypoint.sh:ro
     environment:
       TZ: ${TIMEZONE:-America/New_York}
-    command: ["--init"]
+    entrypoint: ["/bin/bash", "/entrypoint.sh"]
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
       interval: 30s
