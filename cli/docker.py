@@ -137,6 +137,8 @@ def stop_services(profiles: list[str], remove: bool = True) -> bool:
         result = compose_command(["down", "--remove-orphans"], profiles)
     else:
         result = compose_command(["stop"], profiles)
+        if result.returncode == 0:
+            compose_command(["rm", "-f"], profiles)
     return result.returncode == 0
 
 
