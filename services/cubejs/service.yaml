@@ -1,0 +1,10 @@
+name: Cube.js
+category: visualization
+port: 4000
+url: "http://localhost:${CUBEJS_PORT:-4000}"
+description: "Semantic layer and headless BI platform"
+credentials: "API Secret: ${CUBEJS_API_SECRET:-secret}"
+
+healthcheck:
+  type: http
+  endpoint: "http://localhost:${CUBEJS_PORT:-4000}/readyz"

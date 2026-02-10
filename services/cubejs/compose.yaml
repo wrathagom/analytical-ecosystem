@@ -1,0 +1,25 @@
+services:
+  cubejs:
+    image: cubejs/cube:latest
+    profiles: ["cubejs"]
+    ports:
+      - "${CUBEJS_PORT:-4000}:4000"
+    environment:
+      CUBEJS_DEV_MODE: ${CUBEJS_DEV_MODE:-true}
+      CUBEJS_API_SECRET: ${CUBEJS_API_SECRET:-secret}
+      CUBEJS_DB_TYPE: ${CUBEJS_DB_TYPE:-postgres}
+      CUBEJS_DB_HOST: ${CUBEJS_DB_HOST:-postgres}
+      CUBEJS_DB_PORT: ${CUBEJS_DB_PORT:-5432}
+      CUBEJS_DB_NAME: ${CUBEJS_DB_NAME:-analytics}
+      CUBEJS_DB_USER: ${CUBEJS_DB_USER:-analyticsUser}
+      CUBEJS_DB_PASS: ${CUBEJS_DB_PASS:-analyticsPass}
+    volumes:
+      - ./services/cubejs/schema:/cube/conf/schema
+      - cubejs-data:/cube/conf
+    depends_on:
+      - postgres
+    networks:
+      - ecosystem
+
+volumes:
+  cubejs-data:
