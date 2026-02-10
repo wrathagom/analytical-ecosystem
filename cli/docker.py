@@ -131,9 +131,12 @@ def start_services(profiles: list[str], build: bool = True) -> bool:
     return result.returncode == 0
 
 
-def stop_services(profiles: list[str]) -> bool:
-    """Stop services."""
-    result = compose_command(["down", "--remove-orphans"], profiles)
+def stop_services(profiles: list[str], remove: bool = True) -> bool:
+    """Stop services. If remove is True, uses 'down' to tear down all containers. Otherwise uses 'stop' to only stop the specified services."""
+    if remove:
+        result = compose_command(["down", "--remove-orphans"], profiles)
+    else:
+        result = compose_command(["stop"], profiles)
     return result.returncode == 0
 
 

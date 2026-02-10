@@ -693,7 +693,7 @@ def stop_menu(running: list[dict], all_profiles: list[str]):
             if 0 <= idx < len(running):
                 svc = running[idx]
                 print_color(f"\nStopping {svc['name']}...", Colors.CYAN)
-                docker.stop_services([svc["id"]])
+                docker.stop_services([svc["id"]], remove=False)
                 print_color("Service stopped.", Colors.GREEN)
                 wait_for_enter()
         except ValueError:
