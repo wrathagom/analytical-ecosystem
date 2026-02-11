@@ -306,12 +306,13 @@ class TestBackendRegistry:
         from cli.seed.backends import list_backends
 
         backends = list_backends()
-        assert len(backends) == 3
+        assert len(backends) == 4
 
         names = [b[0] for b in backends]
         assert "postgres" in names
         assert "mysql" in names
         assert "elasticsearch" in names
+        assert "duckdb" in names
 
     def test_get_seedable_backends(self):
         from cli.seed.backends import get_seedable_backends
