@@ -14,4 +14,5 @@ echo "Setting file permissions for cross-service editing..."
 chown -R 1000:1000 /evidence-workspace
 
 echo "Starting Evidence dev server..."
-npm run sources && npm run dev -- --host 0.0.0.0
+npm run sources || echo "Warning: source refresh failed (dependencies may not be ready yet). Sources can be refreshed later."
+npm run dev -- --host 0.0.0.0
