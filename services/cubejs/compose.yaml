@@ -16,8 +16,12 @@ services:
     volumes:
       - ./services/cubejs/schema:/cube/conf/schema
       - cubejs-data:/cube/conf
-    depends_on:
-      - postgres
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/readyz', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - ecosystem
 
